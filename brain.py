@@ -122,3 +122,6 @@ class brain:
             print(f"🧠 Brain state restored. {len(self.neurons)} neurons loaded.")
         else:
             print("⚠️ No saved brain found. Starting fresh.")
+
+
+Brain = brain()
