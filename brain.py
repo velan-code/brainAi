@@ -37,10 +37,10 @@ class brain:
     # Brain which is manager that handle syncing and analysis of neurons.
 
     def __init__(self, sensitivity: float = 0.2):
-        self.neurons = []
+        self.netwrok = []
         self.sensitivity = sensitivity  # how related data must be to sync
 
-    def _get_similarity(self, str1: str, str2: str):
+    def _calculate_similarity(self, str1: str, str2: str):
         # Calculate commonality between two data strings.
         #   JACCARD-Simularity Algorithm used here to analaysis this check "https://www.geeksforgeeks.org/python/jaccard-similarity/"
         #
@@ -51,25 +51,25 @@ class brain:
         s2 = set(str2.lower().split())
 
         # Apply on Formula
-        overlap = len(s1.intersection(s2))
-        total = len(s1.union(s2))
+        intersection = len(s1.intersection(s2))
+        union = len(s1.union(s2))
 
         # return Value
-        return overlap / total if total > 0 else 0
+        return intersection / union if union > 0 else 0
 
     def learn(self, info):
         # Create a neuron and automatically syncs it with related ones.
         new_node = neuron(info)
 
-        for exist_neuron in self.neurons:
+        for exist_neuron in self.netwrok:
             # Make Weight(score) by depend on Similarity
-            score = self._get_similarity(info, exist_neuron.content)
+            score = self._calculate_similarity(info, exist_neuron.content)
             if score >= self.sensitivity:
                 # Syncing : connect them bidirectionally
                 new_node.connect(exist_neuron, score)
                 exist_neuron.connect(new_node, score)
 
-        self.neurons.append(new_node)
+        self.netwrok.append(new_node)
         print(f"Learned : '{info}' (Synced with {len(new_node.synapses)} other)")
 
     def analyze(self, query):
@@ -79,8 +79,8 @@ class brain:
         best_neuron = None
         top_score = 0
 
-        for n in self.neurons:
-            score = self._get_similarity(query, n.content)
+        for n in self.netwrok:
+            score = self._calculate_similarity(query, n.content)
             if score > top_score:
                 top_score = score
                 best_neuron = n
