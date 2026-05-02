@@ -22,6 +22,14 @@
 #                       2. provide related resultby accessing info of " best_neuron.synapses " list
 
 
+import pickle
+import os
+
+
+def run(cmd: str):
+    os.system(cmd)
+
+
 class neuron:
     # represent a single brain neuron cell holding one piece of information.
 
@@ -100,10 +108,17 @@ class brain:
         result = self.analyze(query)
         print(f"Brain Summary: {result}")
 
+    def save_network(self, filename="brain_netwrok.pkl"):
+        # Save tranind neuron as file
+        with open(filename, "wb") as file:
+            pickle.dump(self.netwrok, file)
+        print(f"✔️ Brain state saved to {filename}")
 
-Brain = brain(sensitivity=0.15)
-
-Brain.learn(" Hellow World")
-Brain.learn(" your name is velan.jr ")
-Brain.learn(" iam your papa who create you")
-Brain.learn(" papa name is velan ")
+    def load_network(self, filename="brain_netwrok.pkl"):
+        # Load trained neurons from file
+        if os.path.exists(filename):
+            with open(filename, "rb") as file:
+                self.netwrok = pickle.load(file)
+            print(f"🧠 Brain state restored. {len(self.neurons)} neurons loaded.")
+        else:
+            print("⚠️ No saved brain found. Starting fresh.")
