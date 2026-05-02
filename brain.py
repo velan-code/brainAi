@@ -27,7 +27,7 @@ class neuron:
 
     def __init__(self, content):
         self.content = content
-        self.synapses = {}
+        self.synapses = {}  # synapses Link wiht other Neuron object { Neuron : strenght_weight}
 
     def connect(self, other_neuron, weight):
         self.synapses[other_neuron] = weight
@@ -36,7 +36,7 @@ class neuron:
 class brain:
     # Brain which is manager that handle syncing and analysis of neurons.
 
-    def __init(self, sensitivity: float = 0.2):
+    def __init__(self, sensitivity: float = 0.2):
         self.neurons = []
         self.sensitivity = sensitivity  # how related data must be to sync
 
@@ -76,7 +76,7 @@ class brain:
         # Find the most relevant neuron and pulls its entire synced bunch.
 
         # 1.Activation : Find the best entry point
-        best_neuron: neuron = None
+        best_neuron = None
         top_score = 0
 
         for n in self.neurons:
@@ -94,3 +94,16 @@ class brain:
             related_thoughts.add(neighbor.content)
 
         return " | ".join(related_thoughts)
+
+    def ask(self, query: str):
+        print("\n--- QUERY RESULT ---")
+        result = self.analyze(query)
+        print(f"Brain Summary: {result}")
+
+
+Brain = brain(sensitivity=0.15)
+
+Brain.learn(" Hellow World")
+Brain.learn(" your name is velan.jr ")
+Brain.learn(" iam your papa who create you")
+Brain.learn(" papa name is velan ")
