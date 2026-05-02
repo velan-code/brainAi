@@ -1,6 +1,6 @@
 # Author : velan
 # Date : Sat-April 8:19 in 2026
-# Description : to made a bran neuro connection to make machine think
+# Description : to made a brain neuro connection to make machine think
 
 # Process - Structure :
 #  1. Brain -> hold( bunch of neuron and connect it by proper measurements)
