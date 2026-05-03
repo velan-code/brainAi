@@ -23,7 +23,16 @@
 
 
 import pickle
+import spacy
 import os
+
+lol = 4
+
+try:
+    nlp = spacy.load("en_core_web_md")
+except:
+    # If the model isn't downloaded, this prevents a crash
+    print("Error: Run 'python3 -m spacy download en_core_web_md' in terminal first.")
 
 
 def run(cmd: str):
@@ -45,7 +54,7 @@ class brain:
     # Brain which is manager that handle syncing and analysis of neurons.
 
     def __init__(self, sensitivity: float = 0.2):
-        self.netwrok = []
+        self.network = []
         self.sensitivity = sensitivity  # how related data must be to sync
 
     def _calculate_similarity(self, str1: str, str2: str):
@@ -69,7 +78,7 @@ class brain:
         # Create a neuron and automatically syncs it with related ones.
         new_node = neuron(info)
 
-        for exist_neuron in self.netwrok:
+        for exist_neuron in self.network:
             # Make Weight(score) by depend on Similarity
             score = self._calculate_similarity(info, exist_neuron.content)
             if score >= self.sensitivity:
@@ -77,49 +86,76 @@ class brain:
                 new_node.connect(exist_neuron, score)
                 exist_neuron.connect(new_node, score)
 
-        self.netwrok.append(new_node)
+        self.network.append(new_node)
         print(f"Learned : '{info}' (Synced with {len(new_node.synapses)} other)")
 
     def analyze(self, query):
-        # Find the most relevant neuron and pulls its entire synced bunch.
+        """
+        Analyzes query and synthesizes a thematic summary rather than a list.
+        """
+        query_doc = nlp(query)
 
-        # 1.Activation : Find the best entry point
+        # 1. Activation: Find the entry point
         best_neuron = None
-        top_score = 0
+        max_relevance = 0
 
-        for n in self.netwrok:
-            score = self._calculate_similarity(query, n.content)
-            if score > top_score:
-                top_score = score
+        for n in self.network:  # Note: Ensure your init uses self.network
+            neuron_doc = nlp(n.content)
+            score = query_doc.similarity(neuron_doc)
+            if score > max_relevance:
+                max_relevance = score
                 best_neuron = n
 
-        if not best_neuron:
-            return "No related neural pathway found."
+        if not best_neuron or max_relevance < 0.3:
+            return "Neural pathways are too weak to form a conclusion."
 
-        # 2. Synthesis: collect data from the activated neuron and its neighbors
-        related_thoughts = {best_neuron.content}
+        # 2. Thematic Extraction: Gather the cluster
+        cluster_docs = [nlp(best_neuron.content)]
         for neighbor in best_neuron.synapses:
-            related_thoughts.add(neighbor.content)
+            cluster_docs.append(nlp(neighbor.content))
 
-        return " | ".join(related_thoughts)
+        # 3. Intelligence Logic: Find common Nouns and Adjectives (The 'Theme')
+        all_keywords = []
+        for doc in cluster_docs:
+            # Extract only the 'meat' of the sentence
+            keywords = [
+                token.lemma_.lower()
+                for token in doc
+                if token.pos_ in ["NOUN", "ADJ"] and not token.is_stop
+            ]
+            all_keywords.extend(keywords)
+
+        from collections import Counter
+
+        common_themes = [word for word, count in Counter(all_keywords).most_common(3)]
+        theme_str = " & ".join(common_themes).upper()
+
+        # 4. Final Summarized Output
+        # Instead of 'A + B', we describe the relationship
+        summary = (
+            f"IDENTIFIED THEME: [{theme_str}]\n"
+            f"CORE KNOWLEDGE:  '{query}' with {best_neuron.content}. "
+        )
+
+        return summary
 
     def ask(self, query: str):
         print("\n--- QUERY RESULT ---")
         result = self.analyze(query)
         print(f"Brain Summary: {result}")
 
-    def save_network(self, filename="brain_netwrok.pkl"):
+    def save_network(self, filename="brain_network.pkl"):
         # Save tranind neuron as file
         with open(filename, "wb") as file:
-            pickle.dump(self.netwrok, file)
+            pickle.dump(self.network, file)
         print(f"✔️ Brain state saved to {filename}")
 
-    def load_network(self, filename="brain_netwrok.pkl"):
+    def load_network(self, filename="brain_network.pkl"):
         # Load trained neurons from file
         if os.path.exists(filename):
             with open(filename, "rb") as file:
-                self.netwrok = pickle.load(file)
-            print(f"🧠 Brain state restored. {len(self.neurons)} neurons loaded.")
+                self.network = pickle.load(file)
+            print(f"🧠 Brain state restored. {len(self.network)} neurons loaded.")
         else:
             print("⚠️ No saved brain found. Starting fresh.")
 
