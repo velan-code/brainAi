@@ -23,16 +23,7 @@
 
 
 import pickle
-import spacy
 import os
-
-lol = 4
-
-try:
-    nlp = spacy.load("en_core_web_md")
-except:
-    # If the model isn't downloaded, this prevents a crash
-    print("Error: Run 'python3 -m spacy download en_core_web_md' in terminal first.")
 
 
 def run(cmd: str):
@@ -90,54 +81,27 @@ class brain:
         print(f"Learned : '{info}' (Synced with {len(new_node.synapses)} other)")
 
     def analyze(self, query):
-        """
-        Analyzes query and synthesizes a thematic summary rather than a list.
-        """
-        query_doc = nlp(query)
+        # Find the most relevant neuron and pulls its entire synced bunch.
 
-        # 1. Activation: Find the entry point
+        # 1.Activation : Find the best entry point
         best_neuron = None
-        max_relevance = 0
+        top_score = 0
 
-        for n in self.network:  # Note: Ensure your init uses self.network
-            neuron_doc = nlp(n.content)
-            score = query_doc.similarity(neuron_doc)
-            if score > max_relevance:
-                max_relevance = score
+        for n in self.network:
+            score = self._calculate_similarity(query, n.content)
+            if score > top_score:
+                top_score = score
                 best_neuron = n
 
-        if not best_neuron or max_relevance < 0.3:
-            return "Neural pathways are too weak to form a conclusion."
+        if not best_neuron:
+            return "No related neural pathway found."
 
-        # 2. Thematic Extraction: Gather the cluster
-        cluster_docs = [nlp(best_neuron.content)]
+        # 2. Synthesis: collect data from the activated neuron and its neighbors
+        related_thoughts = {best_neuron.content}
         for neighbor in best_neuron.synapses:
-            cluster_docs.append(nlp(neighbor.content))
+            related_thoughts.add(neighbor.content)
 
-        # 3. Intelligence Logic: Find common Nouns and Adjectives (The 'Theme')
-        all_keywords = []
-        for doc in cluster_docs:
-            # Extract only the 'meat' of the sentence
-            keywords = [
-                token.lemma_.lower()
-                for token in doc
-                if token.pos_ in ["NOUN", "ADJ"] and not token.is_stop
-            ]
-            all_keywords.extend(keywords)
-
-        from collections import Counter
-
-        common_themes = [word for word, count in Counter(all_keywords).most_common(3)]
-        theme_str = " & ".join(common_themes).upper()
-
-        # 4. Final Summarized Output
-        # Instead of 'A + B', we describe the relationship
-        summary = (
-            f"IDENTIFIED THEME: [{theme_str}]\n"
-            f"CORE KNOWLEDGE:  '{query}' with {best_neuron.content}. "
-        )
-
-        return summary
+        return " | ".join(related_thoughts)
 
     def ask(self, query: str):
         print("\n--- QUERY RESULT ---")
